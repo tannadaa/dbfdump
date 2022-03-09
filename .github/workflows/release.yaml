@@ -1,0 +1,16 @@
+on:
+  release:
+    types: [created]
+
+jobs:
+  release-windows-amd64:
+    name: release windows 64-bit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: wangyoucao577/go-release-action@v1.25
+        with:
+          github_token: ${{ secrets.RELEASE_TOKEN }}
+          goos: windows
+          goarch: amd64
+          ldflags: "-w -s"
