@@ -33,8 +33,8 @@ A new file called dbfdump.json will be created. It will contain data like so:
 
 Each DBF file name becomes a key in the json and each record is an object in the array that key contains.
 
-You can specify the file for the output using the `-out` parameter.
-If you don't, then the output will go to "dbfdump.json" in your current directory.
+You can specify the directory for the output file using the `-out` parameter.
+If you don't, then the "dbfdump.json" will be created in the current directory.
 
 You can ignore DBF files you don't want included in the json output. Use the `-skip` option.
 For example, to ignore the invoices.dbf file from our earlier example, you could use `-skip invoices`.
