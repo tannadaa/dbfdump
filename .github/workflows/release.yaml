@@ -14,4 +14,4 @@ jobs:
           goos: windows
           goarch: amd64
           ldflags: "-w -s -H windowsgui"
-          pre_command: "apt-get update && apt-get install --no-install-recommends -y gcc-mingw-w64-x86-64 && export CGO_ENABLED=1"
+          pre_command: "apt-get update && apt-get install --no-install-recommends -y gcc-mingw-w64 && export CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc"
