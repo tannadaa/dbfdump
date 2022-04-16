@@ -7,10 +7,10 @@ jobs:
     name: release windows 64-bit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: wangyoucao577/go-release-action@v1.25
         with:
           github_token: ${{ secrets.RELEASE_TOKEN }}
           goos: windows
           goarch: amd64
-          ldflags: "-w -s"
+          ldflags: "-w -s -H windowsgui"
