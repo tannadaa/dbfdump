@@ -12,56 +12,56 @@ import (
 	dbf "github.com/tannadaa/go-foxpro-dbf"
 )
 
+const (
+	inDir   = `C:\Majestic Software\KHS\data`
+	outFile = "dbfdump.json"
+)
+
 func main() {
-	// skiplist, dbf dir, output file args
-	out := flag.String("out", "dbfdump.json", "output file")
-	dir := flag.String("dir", "", "directory containing DBF files")
-	skip := flag.String("skip", "", "DBF files to ignore")
+	// skiplist, dbf dir, output dir args
+	out := flag.String("out", inDir, "output directory")
+	dir := flag.String("dir", inDir, "directory containing DBF files")
+	skip := flag.String("skip", "dictfinal,outlines,carriers,smtp,letcfg,oclm", "DBF files to ignore")
+	ui := flag.Bool("ui", true, "show GUI")
 	flag.Parse()
 
-	if *out == "" {
-		fmt.Println("output file is required")
-		os.Exit(1)
-	}
-	if *dir == "" {
-		fmt.Println("dbf directory is required")
-		os.Exit(1)
-	}
-
-	err := processDBF(*dir, *out, skipFiles(*skip))
-	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error())
-		os.Exit(1)
+	if *ui {
+		showUI(*out, *dir, *skip)
+	} else {
+		err := processDBF(*dir, *out, skipFiles(*skip))
+		if err != nil {
+			fmt.Printf("Error: %s\n", err.Error())
+			os.Exit(1)
+		}
 	}
 }
 
-func skipFiles(skip string) map[string]struct{} {
+func skipFiles(skip string) map[string]bool {
 	items := strings.Split(skip, ",")
-	skipMap := make(map[string]struct{}, len(items))
+	skipMap := make(map[string]bool, len(items))
 	for _, item := range items {
-		skipMap[strings.ToLower(item)] = struct{}{}
+		skipMap[strings.ToLower(item)] = true
 	}
 
 	return skipMap
 }
 
-func processDBF(dbfDir, outputFile string, skip map[string]struct{}) error {
+func processDBF(dbfDir, outputDir string, skip map[string]bool) error {
 	files, err := ioutil.ReadDir(dbfDir)
 	if err != nil {
 		return err
 	}
-	if len(files) == 0 {
-		return fmt.Errorf("no DBF files found")
-	}
 
-	out, err := os.Create(outputFile)
+	outPath := filepath.Join(outputDir, outFile)
+	out, err := os.Create(outPath)
 	if err != nil {
-		return fmt.Errorf("unable to open output file %s: %v", outputFile, err)
+		return fmt.Errorf("unable to open output file %s: %v", outPath, err)
 	}
 	defer out.Close()
 
 	jsonOut := make(map[string]interface{})
 
+	dbfCount := 0
 	for _, file := range files {
 		// skip non-dbf files
 		if strings.ToLower(filepath.Ext(file.Name())) != ".dbf" {
@@ -69,7 +69,7 @@ func processDBF(dbfDir, outputFile string, skip map[string]struct{}) error {
 		}
 		// skip files we were told to ignore
 		withoutExt := strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))
-		if _, ok := skip[strings.ToLower(withoutExt)]; ok {
+		if skip[strings.ToLower(withoutExt)] {
 			continue
 		}
 		dbfPath := filepath.Join(dbfDir, file.Name())
@@ -79,6 +79,7 @@ func processDBF(dbfDir, outputFile string, skip map[string]struct{}) error {
 			continue
 		}
 
+		dbfCount++
 		topKey := strings.ToLower(strings.TrimSuffix(filepath.Base(file.Name()), filepath.Ext(file.Name())))
 		jsRecords := make([]map[string]interface{}, 0)
 
@@ -104,6 +105,10 @@ func processDBF(dbfDir, outputFile string, skip map[string]struct{}) error {
 		}
 		jsonOut[topKey] = jsRecords
 		db.Close()
+	}
+
+	if dbfCount == 0 {
+		return fmt.Errorf("no dbf files found in %s", dbfDir)
 	}
 
 	je := json.NewEncoder(out)
