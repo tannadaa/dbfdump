@@ -21,7 +21,7 @@ func main() {
 	// skiplist, dbf dir, output dir args
 	out := flag.String("out", inDir, "output directory")
 	dir := flag.String("dir", inDir, "directory containing DBF files")
-	skip := flag.String("skip", "dictfinal,outlines,carriers,smtp,letcfg,oclm", "DBF files to ignore")
+	skip := flag.String("skip", "dictfinal,outlines,carriers,smtp,letcfg,oclm,errors", "DBF files to ignore")
 	ui := flag.Bool("ui", true, "show GUI")
 	flag.Parse()
 
@@ -75,8 +75,7 @@ func processDBF(dbfDir, outputDir string, skip map[string]bool) error {
 		dbfPath := filepath.Join(dbfDir, file.Name())
 		db, err := dbf.OpenFile(dbfPath, new(dbf.Win1250Decoder))
 		if err != nil {
-			fmt.Printf("error opening %s: %v", file.Name(), err)
-			continue
+			return fmt.Errorf("error opening %s: %w", file.Name(), err)
 		}
 
 		dbfCount++
@@ -87,8 +86,7 @@ func processDBF(dbfDir, outputDir string, skip map[string]bool) error {
 		for i = 0; i < db.NumRecords(); i++ {
 			m, err := db.RecordToMap(i)
 			if err != nil {
-				fmt.Printf("error converting record to map: %v", err)
-				continue
+				return fmt.Errorf("error converting record to map: %v", err)
 			}
 			jsRecord := make(map[string]interface{}, len(m))
 			for k, v := range m {

@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"strings"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -42,7 +45,8 @@ func showUI(out, dir, skip string) {
 		skips, _ := boundSkip.Get()
 		err := processDBF(inDir, outDir, skipFiles(skips))
 		if err != nil {
-			dialog.ShowError(err, w)
+			// this is a hack to get the error to be multiline
+			dialog.ShowError(fmt.Errorf(strings.ReplaceAll(err.Error(), ": ", "\n")), w)
 		} else {
 			open(outDir)
 		}
